@@ -1,33 +1,42 @@
 const axios = require('axios');
 const Dev = require('../models/Dev');
+const parse = require('../utils/parseStringAsArray');
 
 module.exports ={
     async store(request, reponse) {
         const { github_username, techs , latitude, longitude} = request.body;
         const response_github = await axios.get(`https://api.github.com/users/${github_username}`);
         
-        console.log(response_github.data);
+        let dev = await Dev.findOne(github_username);
 
-        const techsArray = techs.split(',').map(tech => tech.trim());
+        if(!dev){
+            console.log(response_github.data);
 
-        //se o name não existir, ele pegará o login.
-        const { name = login, avatar_url, bio } = response_github.data;
-        
-        const location = {
-            type: 'Point',
-            coordinates: [longitude, latitude],
-        };
+            const techsArray = parse(techs);
 
-        const devSaved = await Dev.create({
-            github_username,
-            name,
-            avatar_url,
-            bio,
-            techs: techsArray,
-            location,
-        });
+            //se o name não existir, ele pegará o login.
+            const { name = login, avatar_url, bio } = response_github.data;
+            
+            const location = {
+                type: 'Point',
+                coordinates: [longitude, latitude],
+            };
 
-        response.send(devSaved);
+            dev = await Dev.create({
+                github_username,
+                name,
+                avatar_url,
+                bio,
+                techs: techsArray,
+                location,
+            });
+        }
+        response.json(dev);
     },
+
+    async index(request, response){
+        const devs = await Dev.find();
+        return response.json(devs);
+    }
 
 };
