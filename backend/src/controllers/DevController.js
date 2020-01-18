@@ -3,11 +3,11 @@ const Dev = require('../models/Dev');
 const parse = require('../utils/parseStringAsArray');
 
 module.exports ={
-    async store(request, reponse) {
+    async store(request, response) {
         const { github_username, techs , latitude, longitude} = request.body;
         const response_github = await axios.get(`https://api.github.com/users/${github_username}`);
         
-        let dev = await Dev.findOne(github_username);
+        let dev = await Dev.findOne({github_username});
 
         if(!dev){
             console.log(response_github.data);
